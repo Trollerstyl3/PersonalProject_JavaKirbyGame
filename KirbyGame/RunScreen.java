@@ -18,6 +18,8 @@ public class RunScreen extends JPanel implements ActionListener, KeyListener{
     CollisionChecker collision;
     private double deltaTime, firstTime, lastTime;
     private Player player;
+    AI ai;
+    Enemy enemy;
 
     ArrayList<Walls> walls;
     
@@ -26,6 +28,8 @@ public class RunScreen extends JPanel implements ActionListener, KeyListener{
 
         collision = new CollisionChecker();
         player = new Player(300,500,this);
+        enemy = new Enemy(600, 500, this);
+        ai = new AI();
         
         makePlatform();
 
@@ -48,8 +52,10 @@ public class RunScreen extends JPanel implements ActionListener, KeyListener{
 
         try{
         player.draw(g2d);
+        enemy.draw(g2d);
         for(Walls i : walls){
             i.draw(g2d);
+            
         }
         }catch(Exception e){
             e.printStackTrace();
@@ -62,6 +68,8 @@ public class RunScreen extends JPanel implements ActionListener, KeyListener{
             firstTime = System.currentTimeMillis();
             deltaTime = (firstTime - lastTime)/1000d;    
             player.move();
+            ai.movement(enemy, player);
+            enemy.move();
             repaint();
             lastTime = firstTime;
         }

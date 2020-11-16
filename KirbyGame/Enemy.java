@@ -3,7 +3,7 @@ import java.awt.geom.*;
 import java.awt.image.*;
 import java.util.ArrayList;
 
-public class Player {
+public class Enemy {
 
     CharacterData sprite;
     CollisionChecker collision;
@@ -41,10 +41,10 @@ public class Player {
     
     private RunScreen screen;
 
-    public Player(int x, int y, RunScreen screen){
+    public Enemy(int x, int y, RunScreen screen){
 
         collision = new CollisionChecker();
-        sprite = new CharacterData(screen,EntityType.PLAYER);
+        sprite = new CharacterData(screen,EntityType.ENEMY);
     
         states = new ArrayList<>();
         states.add(CharacterState.GROUNDED);
@@ -78,21 +78,21 @@ public class Player {
         if(moveLeft && moveRight || !moveLeft && !moveRight){
             dx *= 0.8;
             if(states.contains(CharacterState.SLAM)) dx = 0;
-            if((states.contains(CharacterState.CHARGING) || (states.contains(CharacterState.ATTACKING) && states.contains(CharacterState.GROUNDED)))&& states.contains(CharacterState.RIGHT)) dx = 5;
-            if((states.contains(CharacterState.CHARGING) || (states.contains(CharacterState.ATTACKING) && states.contains(CharacterState.GROUNDED))) && states.contains(CharacterState.LEFT)) dx = -5;
+            if((states.contains(CharacterState.CHARGING) || states.contains(CharacterState.ATTACKING))&& states.contains(CharacterState.RIGHT)) dx = 5;
+            if((states.contains(CharacterState.CHARGING) || states.contains(CharacterState.ATTACKING)) && states.contains(CharacterState.LEFT)) dx = -5;
         }else if(moveLeft && !moveRight){
             
-                dx = Math.max( -7 ,--dx); 
+                dx = Math.max( -5 ,--dx); 
                 if(states.contains(CharacterState.CHARGING)  && attackSide == CharacterState.LEFT) dx += -5; 
-                if(states.contains(CharacterState.ATTACKING)  && attackSide == CharacterState.LEFT  && states.contains(CharacterState.GROUNDED)) dx = -7;
+                if(states.contains(CharacterState.ATTACKING)  && attackSide == CharacterState.LEFT) dx = -7;
                 if(states.contains(CharacterState.SLAM))  dx = 0;
                 if(states.contains(CharacterState.RIGHT) && (attackSide == CharacterState.LEFT || attackSide == null))states.remove(CharacterState.RIGHT);
                 if(!states.contains(CharacterState.LEFT) && (attackSide == CharacterState.LEFT || attackSide == null))states.add(CharacterState.LEFT);
             
         }else if(!moveLeft && moveRight){
-                dx =Math.min( 7 ,++dx);  
-                if(states.contains(CharacterState.ATTACKING)  && attackSide == CharacterState.RIGHT  && states.contains(CharacterState.GROUNDED)) dx = 7;
+                dx =Math.min( 5 ,++dx);  
                 if(states.contains(CharacterState.CHARGING) && attackSide == CharacterState.RIGHT) dx += 5;
+                if(states.contains(CharacterState.ATTACKING)  && attackSide == CharacterState.RIGHT) dx = 7;
                 if(states.contains(CharacterState.SLAM)) dx = 0;
                 if(!states.contains(CharacterState.RIGHT) && (attackSide == CharacterState.RIGHT || attackSide == null))states.add(CharacterState.RIGHT);
                 if(states.contains(CharacterState.LEFT) && (attackSide == CharacterState.RIGHT || attackSide == null))states.remove(CharacterState.LEFT);
@@ -131,11 +131,9 @@ public class Player {
             if(dy == -12) dy = 0;
             dy += 1.5;
             attackSide = null;
-
             if(states.contains(CharacterState.JUMPING))states.remove(CharacterState.JUMPING);
             if(states.contains(CharacterState.FALLING))states.remove(CharacterState.FALLING);
             if(states.contains(CharacterState.CHARGING))states.remove(CharacterState.CHARGING);
-            if(states.contains(CharacterState.ATTACKING))states.remove(CharacterState.ATTACKING);
             if(!states.contains(CharacterState.SLAM))states.add(CharacterState.SLAM);
         }else{
             if(states.contains(CharacterState.SLAM))states.remove(CharacterState.SLAM);
@@ -170,10 +168,11 @@ public class Player {
                 if(attackSide == CharacterState.LEFT) dx = -Math.abs(dx);
                 else if(attackSide == CharacterState.RIGHT) dx = Math.abs(dx);
                 
-                if(attackCounter < 2 && attackSide == CharacterState.RIGHT && states.contains(CharacterState.GROUNDED)) xOffSet = 25;
-                if(attackCounter >= 2 && attackSide == CharacterState.LEFT && states.contains(CharacterState.GROUNDED)) xOffSet = 25;
+                if(attackCounter < 2 && attackSide == CharacterState.LEFT) xOffSet = -25;
+                if(attackCounter >= 2 && attackSide == CharacterState.LEFT) xOffSet = 25;
 
                 attackTime += screen.getDeltaTime();
+                dy = 0;
                 if(attackTime > (attackLength + attackLength / 10) /  5){
                     attackCounter++;
                     attackTime = 0;
