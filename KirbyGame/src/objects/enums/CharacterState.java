@@ -1,3 +1,5 @@
+package src.objects.enums;
+
 public enum CharacterState {
     ATTACKING,
     TAUNTING,
@@ -9,4 +11,5 @@ public enum CharacterState {
     LEFT,
     RIGHT,
     STOPPED,
+    DEAD
 }

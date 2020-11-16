@@ -1,30 +1,25 @@
+package src.objects;
+
 import java.awt.*;
-import java.awt.geom.*; 
 import java.awt.image.*;
-import java.util.ArrayList;
+import src.loader.*;
+import src.util.*;
+import src.*;
+import src.objects.enums.*;
+import src.objects.interfaces.*;
 
-public class Player {
+public class Player extends GameEntity implements ObjectInterface{
 
-    CharacterData sprite;
     CollisionChecker collision;
-    ArrayList<CharacterState> states;
 
-    boolean moveLeft;
-    boolean moveRight;
-    boolean moveUp;
-    boolean moveDown;
+    public boolean moveLeft;
+    public boolean moveRight;
+    public boolean moveUp;
+    public boolean moveDown;
 
-    boolean charge;
-    boolean attack;
-    boolean taunt;
-
-    private double dx;
-    private double dy;
-    
-    private int x;
-    private int y;
-    private int height;
-    private int width;
+    public boolean charge;
+    public boolean attack;
+    public boolean taunt;
 
     private int scale; 
 
@@ -37,39 +32,26 @@ public class Player {
 
     int xOffSet,yOffSet;
 
-    private Rectangle2D.Double hitBox;
-    
-    private RunScreen screen;
-
     public Player(int x, int y, RunScreen screen){
 
+        super(x,y,screen,EntityType.PLAYER);
+
         collision = new CollisionChecker();
-        sprite = new CharacterData(screen,EntityType.PLAYER);
     
-        states = new ArrayList<>();
         states.add(CharacterState.GROUNDED);
         states.add(CharacterState.RIGHT);
 
         dx = 0;
-        dx = 0;
+        dy = 0;
 
         yOffSet = 0;
         xOffSet = 0;
-
-        this.x = x;
-        this.y = y;
-        this.screen = screen;
-
-        width = 100;
-        height = 100;
 
         scale = 2;
 
         attackTime = 0;
         attackCounter = 0;
         attackLimit = 0;
-
-        hitBox = new Rectangle2D.Double(x,y,width,height);
     }
 
 
@@ -315,16 +297,4 @@ public class Player {
         g2d.drawImage(current, x-xOffSet, y-yOffSet, current.getWidth()* scale, current.getHeight() * scale,null);
     }
 
-    public Shape getHitBox(){
-        return hitBox;
-    }
-
-
-    public int getX(){
-        return x;
-    }
-
-    public int getY(){
-        return y;
-    }
 }

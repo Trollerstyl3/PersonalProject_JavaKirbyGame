@@ -1,7 +1,10 @@
-import java.awt.*;
-import java.awt.geom.*; 
+package src.objects;
 
-public class Walls {
+import java.awt.*;
+import java.awt.geom.*;
+import src.objects.interfaces.*;
+
+public class Walls implements ObjectInterface{
     
     int x;
     int y;
@@ -29,5 +32,7 @@ public class Walls {
     public Shape getHitBox(){
         return hitBox;
     }
+
+
 
 }

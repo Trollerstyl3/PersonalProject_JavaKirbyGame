@@ -1,10 +1,15 @@
+package src.util;
+
+import src.objects.*;
+import src.objects.enums.*;
+
 /**
  * AI
  */
 public class AI {
      
     public void movement(Enemy enemy, Player player){
-        if((Math.abs(enemy.getX()-player.getX()) < 100 || Math.abs(player.getX()-enemy.getX()) < 100) && enemy.states.contains(CharacterState.GROUNDED) && enemy.getY() == player.getY()){
+        if((Math.abs(enemy.getX()-player.getX()) < 100 || Math.abs(player.getX()-enemy.getX()) < 100) && enemy.getStates().contains(CharacterState.GROUNDED) && enemy.getY() == player.getY()){
         
             enemy.attack= true;
 
@@ -18,17 +23,17 @@ public class AI {
             enemy.attack = false;
         }
 
-        if(Math.abs(enemy.getX()-player.getX()) < 30 && enemy.getY() < player.getY() && !enemy.states.contains(CharacterState.GROUNDED)){
+        if(Math.abs(enemy.getX()-player.getX()) < 30 && enemy.getY() < player.getY() && !enemy.getStates().contains(CharacterState.GROUNDED)){
         
             enemy.moveDown = true;
             enemy.moveUp = false;
 
         }
 
-        if(enemy.getY() > player.getY()+200 && enemy.states.contains(CharacterState.GROUNDED)){
+        if(enemy.getY() > player.getY()+200 && enemy.getStates().contains(CharacterState.GROUNDED)){
             enemy.moveUp = true;
             enemy.moveDown = false;
-        }else if(enemy.states.contains(CharacterState.GROUNDED)){
+        }else if(enemy.getStates().contains(CharacterState.GROUNDED)){
             enemy.moveUp = false;
             enemy.moveDown = false;
         }

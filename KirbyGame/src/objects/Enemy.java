@@ -1,30 +1,25 @@
+package src.objects;
+
 import java.awt.*;
-import java.awt.geom.*; 
 import java.awt.image.*;
-import java.util.ArrayList;
+import src.loader.*;
+import src.util.*;
+import src.*;
+import src.objects.enums.*;
+import src.objects.interfaces.*;
 
-public class Enemy {
+public class Enemy extends GameEntity implements ObjectInterface{
 
-    CharacterData sprite;
     CollisionChecker collision;
-    ArrayList<CharacterState> states;
 
-    boolean moveLeft;
-    boolean moveRight;
-    boolean moveUp;
-    boolean moveDown;
+    public boolean moveLeft;
+    public boolean moveRight;
+    public boolean moveUp;
+    public boolean moveDown;
 
-    boolean charge;
-    boolean attack;
-    boolean taunt;
-
-    private double dx;
-    private double dy;
-    
-    private int x;
-    private int y;
-    private int height;
-    private int width;
+    public boolean charge;
+    public boolean attack;
+    public boolean taunt;
 
     private int scale; 
 
@@ -37,39 +32,26 @@ public class Enemy {
 
     int xOffSet,yOffSet;
 
-    private Rectangle2D.Double hitBox;
-    
-    private RunScreen screen;
-
     public Enemy(int x, int y, RunScreen screen){
 
+        super(x,y,screen,EntityType.ENEMY);
+
         collision = new CollisionChecker();
-        sprite = new CharacterData(screen,EntityType.ENEMY);
     
-        states = new ArrayList<>();
         states.add(CharacterState.GROUNDED);
         states.add(CharacterState.RIGHT);
 
         dx = 0;
-        dx = 0;
+        dy = 0;
 
         yOffSet = 0;
         xOffSet = 0;
-
-        this.x = x;
-        this.y = y;
-        this.screen = screen;
-
-        width = 100;
-        height = 100;
 
         scale = 2;
 
         attackTime = 0;
         attackCounter = 0;
         attackLimit = 0;
-
-        hitBox = new Rectangle2D.Double(x,y,width,height);
     }
 
 
@@ -78,21 +60,21 @@ public class Enemy {
         if(moveLeft && moveRight || !moveLeft && !moveRight){
             dx *= 0.8;
             if(states.contains(CharacterState.SLAM)) dx = 0;
-            if((states.contains(CharacterState.CHARGING) || states.contains(CharacterState.ATTACKING))&& states.contains(CharacterState.RIGHT)) dx = 5;
-            if((states.contains(CharacterState.CHARGING) || states.contains(CharacterState.ATTACKING)) && states.contains(CharacterState.LEFT)) dx = -5;
+            if((states.contains(CharacterState.CHARGING) || (states.contains(CharacterState.ATTACKING) && states.contains(CharacterState.GROUNDED)))&& states.contains(CharacterState.RIGHT)) dx = 5;
+            if((states.contains(CharacterState.CHARGING) || (states.contains(CharacterState.ATTACKING) && states.contains(CharacterState.GROUNDED))) && states.contains(CharacterState.LEFT)) dx = -5;
         }else if(moveLeft && !moveRight){
             
-                dx = Math.max( -5 ,--dx); 
+                dx = Math.max( -7 ,--dx); 
                 if(states.contains(CharacterState.CHARGING)  && attackSide == CharacterState.LEFT) dx += -5; 
-                if(states.contains(CharacterState.ATTACKING)  && attackSide == CharacterState.LEFT) dx = -7;
+                if(states.contains(CharacterState.ATTACKING)  && attackSide == CharacterState.LEFT  && states.contains(CharacterState.GROUNDED)) dx = -7;
                 if(states.contains(CharacterState.SLAM))  dx = 0;
                 if(states.contains(CharacterState.RIGHT) && (attackSide == CharacterState.LEFT || attackSide == null))states.remove(CharacterState.RIGHT);
                 if(!states.contains(CharacterState.LEFT) && (attackSide == CharacterState.LEFT || attackSide == null))states.add(CharacterState.LEFT);
             
         }else if(!moveLeft && moveRight){
-                dx =Math.min( 5 ,++dx);  
+                dx =Math.min( 7 ,++dx);  
+                if(states.contains(CharacterState.ATTACKING)  && attackSide == CharacterState.RIGHT  && states.contains(CharacterState.GROUNDED)) dx = 7;
                 if(states.contains(CharacterState.CHARGING) && attackSide == CharacterState.RIGHT) dx += 5;
-                if(states.contains(CharacterState.ATTACKING)  && attackSide == CharacterState.RIGHT) dx = 7;
                 if(states.contains(CharacterState.SLAM)) dx = 0;
                 if(!states.contains(CharacterState.RIGHT) && (attackSide == CharacterState.RIGHT || attackSide == null))states.add(CharacterState.RIGHT);
                 if(states.contains(CharacterState.LEFT) && (attackSide == CharacterState.RIGHT || attackSide == null))states.remove(CharacterState.LEFT);
@@ -131,9 +113,11 @@ public class Enemy {
             if(dy == -12) dy = 0;
             dy += 1.5;
             attackSide = null;
+
             if(states.contains(CharacterState.JUMPING))states.remove(CharacterState.JUMPING);
             if(states.contains(CharacterState.FALLING))states.remove(CharacterState.FALLING);
             if(states.contains(CharacterState.CHARGING))states.remove(CharacterState.CHARGING);
+            if(states.contains(CharacterState.ATTACKING))states.remove(CharacterState.ATTACKING);
             if(!states.contains(CharacterState.SLAM))states.add(CharacterState.SLAM);
         }else{
             if(states.contains(CharacterState.SLAM))states.remove(CharacterState.SLAM);
@@ -168,11 +152,10 @@ public class Enemy {
                 if(attackSide == CharacterState.LEFT) dx = -Math.abs(dx);
                 else if(attackSide == CharacterState.RIGHT) dx = Math.abs(dx);
                 
-                if(attackCounter < 2 && attackSide == CharacterState.LEFT) xOffSet = -25;
-                if(attackCounter >= 2 && attackSide == CharacterState.LEFT) xOffSet = 25;
+                if(attackCounter < 2 && attackSide == CharacterState.RIGHT && states.contains(CharacterState.GROUNDED)) xOffSet = 25;
+                if(attackCounter >= 2 && attackSide == CharacterState.LEFT && states.contains(CharacterState.GROUNDED)) xOffSet = 25;
 
                 attackTime += screen.getDeltaTime();
-                dy = 0;
                 if(attackTime > (attackLength + attackLength / 10) /  5){
                     attackCounter++;
                     attackTime = 0;
@@ -314,16 +297,4 @@ public class Enemy {
         g2d.drawImage(current, x-xOffSet, y-yOffSet, current.getWidth()* scale, current.getHeight() * scale,null);
     }
 
-    public Shape getHitBox(){
-        return hitBox;
-    }
-
-
-    public int getX(){
-        return x;
-    }
-
-    public int getY(){
-        return y;
-    }
 }

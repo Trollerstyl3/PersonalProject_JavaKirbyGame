@@ -1,3 +1,4 @@
+package src;
 
 
 /**
@@ -8,6 +9,8 @@ import java.awt.event.*;
 import javax.swing.Timer;
 import java.awt.*;
 import java.util.ArrayList;
+import src.objects.*;
+import src.util.*;
 
 public class RunScreen extends JPanel implements ActionListener, KeyListener{
 
@@ -21,7 +24,7 @@ public class RunScreen extends JPanel implements ActionListener, KeyListener{
     AI ai;
     Enemy enemy;
 
-    ArrayList<Walls> walls;
+    public ArrayList<Walls> walls;
     
 
     public RunScreen(){

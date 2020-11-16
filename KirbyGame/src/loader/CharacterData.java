@@ -1,8 +1,10 @@
+package src.loader;
 import java.awt.image.*;
 import javax.imageio.*;
+import src.*;
+import src.objects.enums.*;
 
 import java.io.*;
-import java.awt.*;
 
 public class CharacterData {
     public static final int WALK_RIGHT = 0;
@@ -65,7 +67,7 @@ public class CharacterData {
 
         spriteSheetCharacter = null;
 
-        File myFileCharacter = new File("KirbyGame/res/kirbys_character.png");
+        File myFileCharacter = new File("src/res/kirbys_character.png");
 
         try {
             spriteSheetCharacter = ImageIO.read(myFileCharacter);   
