@@ -17,6 +17,10 @@ public class RunScreen extends JPanel implements ActionListener, KeyListener{
     /**
      *
      */
+    private static final long serialVersionUID = 1L;
+    /**
+     *
+     */
     Timer timer;
     CollisionChecker collision;
     private double deltaTime, firstTime, lastTime;
@@ -54,8 +58,9 @@ public class RunScreen extends JPanel implements ActionListener, KeyListener{
         Graphics2D g2d = (Graphics2D) g;
 
         try{
-        player.draw(g2d);
         enemy.draw(g2d);
+        player.draw(g2d);
+
         for(Walls i : walls){
             i.draw(g2d);
             

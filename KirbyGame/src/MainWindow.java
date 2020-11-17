@@ -6,6 +6,10 @@ import java.awt.*;
 
 public class MainWindow extends JFrame {
     
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
     private RunScreen screen;
     public static final int WINDOW_WIDTH = 700;
     public static final int WINDOW_HEIGHT = 700;

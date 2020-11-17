@@ -278,20 +278,20 @@ public class Player extends GameEntity implements ObjectInterface{
         x += dx;
         y += dy;
 
+
+
         hitBox.x = x;
         hitBox.y = y;
     }
 
     public void draw(Graphics2D g2d){
 
-
         current = sprite.draw();
-
             
         yOffSet = current.getHeight()*scale;
 
         
-        hitBox.setFrame(x-xOffSet, y-yOffSet,current.getWidth()* scale, current.getHeight()* scale);
+        hitBox.setFrame(x-xOffSet, y-yOffSet, (current.getWidth())* scale, (current.getHeight())* scale);
         g2d.setPaint(Color.RED);
         g2d.draw(hitBox);
         g2d.drawImage(current, x-xOffSet, y-yOffSet, current.getWidth()* scale, current.getHeight() * scale,null);

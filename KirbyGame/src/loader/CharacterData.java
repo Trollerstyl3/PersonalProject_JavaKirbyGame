@@ -3,9 +3,7 @@ import java.awt.image.*;
 import javax.imageio.*;
 import src.*;
 import src.objects.enums.*;
-
 import java.io.*;
-
 public class CharacterData {
     public static final int WALK_RIGHT = 0;
     public static final int WALK_LEFT = 1;
@@ -57,11 +55,16 @@ public class CharacterData {
     }
 
     public void loadImages(){
-        normalKirby = new BufferedImage [24][];
-        initNormalKirby();
 
-        knightKirby = new BufferedImage [24][];
-        initKnightKirby();
+
+
+        if(entityType == EntityType.PLAYER){
+            normalKirby = new BufferedImage [24][];
+            initNormalKirby();
+        }else if(entityType == EntityType.ENEMY){
+            knightKirby = new BufferedImage [24][];
+            initKnightKirby();
+        }
         
         found = true;
 
@@ -77,15 +80,13 @@ public class CharacterData {
             System.out.println("not found");
         }
 
-        if(found){
-            
-            setNormalKirby();
-            
-            setKnightKirby();
+        if(found){            
 
             if(entityType == EntityType.PLAYER){
+                setNormalKirby();
                 currentImageArray = normalKirby[WALK_RIGHT];
             }else if(entityType == EntityType.ENEMY){
+                setKnightKirby();
                 currentImageArray = knightKirby[WALK_LEFT];
             }
             
@@ -201,7 +202,10 @@ public class CharacterData {
             normalKirby[VICTORY_LEFT][3] = flip(normalKirby[VICTORY_RIGHT][3]);
             normalKirby[VICTORY_LEFT][4] = flip(normalKirby[VICTORY_RIGHT][4]);
             normalKirby[VICTORY_LEFT][5] = flip(normalKirby[VICTORY_RIGHT][5]);
+            
+            normalKirby[LOSE_LEFT][0] = flip(normalKirby[LOSE_RIGHT][0]);
     }
+
 
     private void initKnightKirby(){
         knightKirby[WALK_RIGHT] = new BufferedImage[2];
@@ -232,7 +236,6 @@ public class CharacterData {
     }
 
     private void setKnightKirby(){
-        normalKirby[LOSE_LEFT][0] = flip(normalKirby[LOSE_RIGHT][0]);
 
         knightKirby[STAND_RIGHT][0] = spriteSheetCharacter.getSubimage(4, 275, 26, 30);
 
@@ -351,11 +354,11 @@ public class CharacterData {
 
     BufferedImage flip(BufferedImage sprite){
         BufferedImage img = new BufferedImage(sprite.getWidth(),sprite.getHeight(),BufferedImage.TYPE_INT_ARGB);
-        for(int xx = sprite.getWidth()-1;xx>0;xx--){
-            for(int yy = 0;yy < sprite.getHeight();yy++){
-                img.setRGB(sprite.getWidth()-xx, yy, sprite.getRGB(xx, yy));
+        for(int x = sprite.getWidth()-1;x>0;x--){
+            for(int y = 0;y < sprite.getHeight();y++){
+                img.setRGB(sprite.getWidth()-x, y, sprite.getRGB(x, y));
             }
         }
-    return img;
-}
+        return img; 
+    }
 }
