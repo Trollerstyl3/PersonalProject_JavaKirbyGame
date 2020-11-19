@@ -11,5 +11,6 @@ public enum CharacterState {
     LEFT,
     RIGHT,
     STOPPED,
+    HURT,
     DEAD
 }

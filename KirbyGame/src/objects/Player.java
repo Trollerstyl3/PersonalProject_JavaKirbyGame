@@ -17,11 +17,18 @@ public class Player extends GameEntity implements ObjectInterface{
     public boolean moveUp;
     public boolean moveDown;
 
+
     public boolean charge;
     public boolean attack;
     public boolean taunt;
+    public boolean getHit;
 
-    private int scale; 
+    private double scale; 
+    private int health, attackDamage, slamDamage, armor;
+    private int hurtCount;
+    public int damageReceived;
+
+    int hurtTime;
 
     double attackTime;
     int attackCounter;
@@ -31,6 +38,8 @@ public class Player extends GameEntity implements ObjectInterface{
     CharacterState attackSide;
 
     int xOffSet,yOffSet;
+
+    Stage stage;
 
     public Player(int x, int y, RunScreen screen){
 
@@ -47,16 +56,29 @@ public class Player extends GameEntity implements ObjectInterface{
         yOffSet = 0;
         xOffSet = 0;
 
-        scale = 2;
+        scale = 2.5;
 
         attackTime = 0;
         attackCounter = 0;
         attackLimit = 0;
+
+        health = 100;
+        attackDamage = 15;
+        slamDamage = 10;
+        armor = 5;
+        getHit = false;
+        hurtCount = 0;
+
+        stage = screen.stage;
     }
 
 
     public void move(){
-        
+        if(getHit && moveDown && states.contains(CharacterState.GROUNDED)){
+            getHit = false;
+        }
+
+
         if(moveLeft && moveRight || !moveLeft && !moveRight){
             dx *= 0.8;
             if(states.contains(CharacterState.SLAM)) dx = 0;
@@ -84,15 +106,13 @@ public class Player extends GameEntity implements ObjectInterface{
         dy += 0.3;
 
         if(moveUp){
-            for(Walls wall: screen.walls){
-                hitBox.y +=2;
-                if(collision.checkWall(wall.getHitBox(),getHitBox())){
-                    dy = -12;
-                    if(states.contains(CharacterState.GROUNDED))states.remove(CharacterState.GROUNDED);
-                    if(!states.contains(CharacterState.JUMPING))states.add(CharacterState.JUMPING);
-                }
-                hitBox.y -= 2;
+            hitBox.y +=2;
+            if(collision.check(stage.getHitBox(),getHitBox())){
+                dy = -12;
+                if(states.contains(CharacterState.GROUNDED))states.remove(CharacterState.GROUNDED);
+                if(!states.contains(CharacterState.JUMPING))states.add(CharacterState.JUMPING);
             }
+            hitBox.y -= 2;
         }
 
         if(taunt){
@@ -107,6 +127,42 @@ public class Player extends GameEntity implements ObjectInterface{
 
         if(attack){
             if(!states.contains(CharacterState.ATTACKING))states.add(CharacterState.ATTACKING);
+        }
+
+        if(getHit){
+            
+            health -= (damageReceived-armor);
+            dx = 0;
+            charge = false;
+            attack = false;
+            taunt = false;
+            hurtCount ++;
+            attackCounter = 10;
+            attackTime = 1000;
+
+
+
+
+            if(!states.contains(CharacterState.HURT))states.add(CharacterState.HURT);
+            if(states.contains(CharacterState.ATTACKING))states.remove(CharacterState.ATTACKING);
+            if(states.contains(CharacterState.CHARGING))states.remove(CharacterState.CHARGING);
+            if(states.contains(CharacterState.TAUNTING))states.remove(CharacterState.TAUNTING);
+        }
+
+        if(states.contains(CharacterState.HURT)){
+            double hurtLength = 0.1;
+            if(hurtCount < 3){
+                hurtTime += screen.getDeltaTime();
+                if(hurtTime > (hurtLength + hurtLength / 10) /  5){
+                    hurtCount++;
+                    hurtTime = 0;
+                }
+            }else{
+                hurtCount = 0;
+                hurtTime = 0;
+                getHit = false;
+                if(states.contains(CharacterState.HURT))states.remove(CharacterState.HURT);
+            }
         }
 
         if(moveDown){
@@ -144,6 +200,7 @@ public class Player extends GameEntity implements ObjectInterface{
             }
         }
 
+
         if(states.contains(CharacterState.ATTACKING) && !states.contains(CharacterState.SLAM)){
             double attackLength = 0.4;
             if(attackCounter == 0 && states.contains(CharacterState.LEFT)) attackSide = CharacterState.LEFT;
@@ -180,9 +237,14 @@ public class Player extends GameEntity implements ObjectInterface{
             if(states.contains(CharacterState.JUMPING))states.remove(CharacterState.JUMPING);
             if(!states.contains(CharacterState.FALLING))states.add(CharacterState.FALLING);
         }
-    
-        if(states.contains(CharacterState.GROUNDED)){
 
+
+        if(states.contains(CharacterState.HURT)){
+            if(states.contains(CharacterState.LEFT)) sprite.setCurrentState(CharacterData.HURT_LEFT);
+            else if(states.contains(CharacterState.RIGHT)) sprite.setCurrentState(CharacterData.HURT_RIGHT);
+
+
+        }else if(states.contains(CharacterState.GROUNDED)){
 
             if(states.contains(CharacterState.RIGHT)){
                 sprite.setCurrentState(CharacterData.WALK_RIGHT);
@@ -190,13 +252,13 @@ public class Player extends GameEntity implements ObjectInterface{
                     sprite.setCurrentState(CharacterData.SLAM_RIGHT);
                 }else if(states.contains(CharacterState.ATTACKING)){
                     if(states.contains(attackSide) || attackSide == null){
-                     sprite.setCurrentState(CharacterData.ATTACK_RIGHT);
+                    sprite.setCurrentState(CharacterData.ATTACK_RIGHT);
                     }else{
                         sprite.setCurrentState(CharacterData.ATTACK_LEFT);
                     }
                 }else if(states.contains(CharacterState.CHARGING)){
                     if(states.contains(attackSide) || attackSide == null){
-                     sprite.setCurrentState(CharacterData.CHARGE_RIGHT);
+                    sprite.setCurrentState(CharacterData.CHARGE_RIGHT);
                     }else{
                         sprite.setCurrentState(CharacterData.CHARGE_LEFT);
                     }
@@ -213,7 +275,7 @@ public class Player extends GameEntity implements ObjectInterface{
                     sprite.setCurrentState(CharacterData.SLAM_LEFT);
                 } else if(states.contains(CharacterState.ATTACKING)){
                     if(states.contains(attackSide) || attackSide == null){
-                     sprite.setCurrentState(CharacterData.ATTACK_LEFT);
+                    sprite.setCurrentState(CharacterData.ATTACK_LEFT);
                     }else{
                         sprite.setCurrentState(CharacterData.ATTACK_RIGHT);
                     }
@@ -221,7 +283,7 @@ public class Player extends GameEntity implements ObjectInterface{
                     if(states.contains(attackSide) || attackSide == null){
                         sprite.setCurrentState(CharacterData.CHARGE_LEFT);
                     }else{
-                       sprite.setCurrentState(CharacterData.CHARGE_RIGHT);
+                    sprite.setCurrentState(CharacterData.CHARGE_RIGHT);
                     }
                 }else if(states.contains(CharacterState.STOPPED)){
                     sprite.setCurrentState(CharacterData.STAND_LEFT);
@@ -258,43 +320,53 @@ public class Player extends GameEntity implements ObjectInterface{
 
         if(states.contains(CharacterState.GROUNDED) || states.contains(CharacterState.FALLING) || states.contains(CharacterState.SLAM)){
             hitBox.y += dy;
-            for(Walls wall: screen.walls){
+        
+            if(collision.check(stage.getHitBox(),getHitBox())){
+                hitBox.y -= dy;
 
-                if(collision.checkWall(wall.getHitBox(),getHitBox())){
-                    hitBox.y -= dy;
-
-                    while(!collision.checkWall(wall.getHitBox(),getHitBox())) hitBox.y ++;
-                    hitBox.y -=2;
-                    y = (int) hitBox.y+yOffSet;
-                    dy = 0;
-                    if(states.contains(CharacterState.FALLING))states.remove(CharacterState.FALLING);
-                    if(!states.contains(CharacterState.GROUNDED))states.add(CharacterState.GROUNDED);
-                }
-
+                while(!collision.check(stage.getHitBox(),getHitBox())) hitBox.y ++;
+                hitBox.y -=2;
+                y = (int) hitBox.y+yOffSet;
+                dy = 0;
+                if(states.contains(CharacterState.FALLING))states.remove(CharacterState.FALLING);
+                if(!states.contains(CharacterState.GROUNDED))states.add(CharacterState.GROUNDED);
             }
+
+            
         }
 
 
         x += dx;
         y += dy;
 
-
-
         hitBox.x = x;
         hitBox.y = y;
+        
+        
     }
 
     public void draw(Graphics2D g2d){
 
         current = sprite.draw();
             
-        yOffSet = current.getHeight()*scale;
+        yOffSet = (int) (current.getHeight()*scale);
 
-        
-        hitBox.setFrame(x-xOffSet, y-yOffSet, (current.getWidth())* scale, (current.getHeight())* scale);
+        hitBox.setFrame(x-xOffSet, y-yOffSet,(int) (current.getWidth()* scale),(int) (current.getHeight()* scale));
         g2d.setPaint(Color.RED);
         g2d.draw(hitBox);
-        g2d.drawImage(current, x-xOffSet, y-yOffSet, current.getWidth()* scale, current.getHeight() * scale,null);
+        g2d.drawImage(current, x-xOffSet, y-yOffSet,(int) (current.getWidth()* scale),(int) (current.getHeight()* scale),null);
+    }
+
+
+
+    public int getDamage(){
+        if(states.contains(CharacterState.ATTACKING)){
+            return attackDamage;
+        }else if(states.contains(CharacterState.SLAM)){
+            return slamDamage;
+        }else{
+            return 0;
+        }
     }
 
 }

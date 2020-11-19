@@ -21,7 +21,6 @@ public class MainWindow extends JFrame {
         screen.setLocation(0,0);
         screen.setSize(this.getSize());
         screen.setVisible(true);
-        screen.setBackground(Color.GRAY);
         screen.addKeyListener(screen);
         this.add(screen);
         screen.timer.start();
