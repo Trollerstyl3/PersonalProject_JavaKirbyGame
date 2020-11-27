@@ -1,0 +1,49 @@
+package src.gamestates;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+
+import src.gamestates.enums.GameStates;
+
+
+public class EndPage extends ScreenState{
+
+    public EndPage(){
+        super();
+    }
+
+    @Override
+    public void draw(Graphics2D g2d, GameStates gameStates){
+
+        if(gameStates == GameStates.GAMEWIN){
+            g2d.setPaint(Color.BLACK);
+            g2d.setFont(sfAtarian.deriveFont(80f));
+            g2d.drawString("YOU WON", 173,200); 
+
+            g2d.setFont(sfAtarian.deriveFont(77f));
+            g2d.setPaint(Color.GREEN);
+            g2d.drawString("YOU WON", 180,200); 
+            
+            g2d.setPaint(Color.BLACK);
+            g2d.setFont(sfAtarian.deriveFont(25f));
+            g2d.drawString("press ENTER to return to main menu",135,310);
+            g2d.drawString("press R to play again",230,350);
+            g2d.drawString("press Q to quit",260,390);
+        }else if(gameStates == GameStates.GAMELOSE){
+            g2d.setPaint(Color.BLACK);
+            g2d.setFont(sfAtarian.deriveFont(80f));
+            g2d.drawString("YOU LOSE", 172,200); 
+
+            g2d.setFont(sfAtarian.deriveFont(77f));
+            g2d.setPaint(Color.RED);
+            g2d.drawString("YOU LOSE", 180,200); 
+            
+            g2d.setPaint(Color.BLACK);
+            g2d.setFont(sfAtarian.deriveFont(25f));
+            g2d.drawString("press ENTER to return to main menu",135,310);
+            g2d.drawString("press R to play again",230,350);
+            g2d.drawString("press Q to quit",260,390);
+        }
+        
+    }
+}

@@ -1,0 +1,14 @@
+package src.loader;
+
+import src.util.AudioPlayer;
+
+public class SoundManager
+{ 
+  //audio objects and files
+  public AudioPlayer swingPlayer = new AudioPlayer("src/res/swingPlayer.wav");
+  public AudioPlayer swingEnemy = new AudioPlayer("src/res/swingEnemy.wav");
+  public AudioPlayer damagedPlayer = new AudioPlayer("src/res/damagedPlayer.wav");
+  public AudioPlayer damagedEnemy = new AudioPlayer("src/res/damagedEnemy.wav");
+  public AudioPlayer backgroundMusic = new AudioPlayer("src/res/backgroundMusic.wav");
+  
+}

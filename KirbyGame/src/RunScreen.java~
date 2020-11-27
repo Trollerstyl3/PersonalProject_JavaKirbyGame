@@ -8,9 +8,15 @@ import javax.swing.JPanel;
 import java.awt.event.*;
 import javax.swing.Timer;
 import java.awt.*;
-import java.util.ArrayList;
 import src.objects.*;
+import src.objects.Stage;
+import src.objects.enums.CharacterState;
 import src.util.*;
+import src.gamestates.enums.GameStates;
+import src.gamestates.Pause;
+import src.gamestates.Menu;
+import src.gamestates.EndPage;
+import src.loader.SoundManager;
 
 public class RunScreen extends JPanel implements ActionListener, KeyListener{
 
@@ -25,30 +31,32 @@ public class RunScreen extends JPanel implements ActionListener, KeyListener{
     CollisionChecker collision;
     private double deltaTime, firstTime, lastTime;
     private Player player;
+    GameStates currentGameState;
     AI ai;
     Enemy enemy;
-
-    public ArrayList<Walls> walls;
+    Background background;
+    Pause pause;
+    Menu menu;
+    EndPage endPage;
+    public Stage stage;
+    public SoundManager soundManager ;
     
 
     public RunScreen(){
-
+        soundManager = new SoundManager();
+        soundManager.backgroundMusic.loop();
+        stage = new Stage(0,400,this);
         collision = new CollisionChecker();
-        player = new Player(300,500,this);
-        enemy = new Enemy(600, 500, this);
-        ai = new AI();
-        
-        makePlatform();
-
+        player = new Player(100,400,this);
+        enemy = new Enemy(600, 400, this);
+        background = new Background(0,0,this);
+        ai = new AI(this);
+        pause = new Pause();
+        menu = new Menu();
+        endPage = new EndPage();
+        currentGameState = GameStates.GAMEMENU;
         timer = new Timer(17,this);
         setFocusable(true);
-    }
-
-    public void makePlatform(){
-        walls = new ArrayList<>();
-        for(int i = 50; i < 650 ; i+=50){
-            walls.add(new Walls(i,500));
-        }
     }
 
 
@@ -58,13 +66,18 @@ public class RunScreen extends JPanel implements ActionListener, KeyListener{
         Graphics2D g2d = (Graphics2D) g;
 
         try{
-        enemy.draw(g2d);
-        player.draw(g2d);
-
-        for(Walls i : walls){
-            i.draw(g2d);
             
-        }
+            background.draw(g2d);
+            if(currentGameState == GameStates.GAMEMENU || currentGameState == GameStates.GAMEINSTRUCTION || currentGameState == GameStates.GAMEINSTRUCTION_2){
+                menu.draw(g2d,currentGameState);
+            }else if(currentGameState == GameStates.GAMEWIN || currentGameState == GameStates.GAMELOSE){
+                endPage.draw(g2d,currentGameState);
+            }else{
+                stage.draw(g2d);
+                enemy.draw(g2d);
+                player.draw(g2d);
+                if(currentGameState == GameStates.GAMEPAUSED) pause.draw(g2d,currentGameState);
+            }
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -74,10 +87,16 @@ public class RunScreen extends JPanel implements ActionListener, KeyListener{
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() == timer){
             firstTime = System.currentTimeMillis();
-            deltaTime = (firstTime - lastTime)/1000d;    
-            player.move();
-            ai.movement(enemy, player);
-            enemy.move();
+            deltaTime = (firstTime - lastTime)/1000d;
+            if(currentGameState == GameStates.GAMESTARTED){
+                player.move();
+                ai.movement(enemy, player);
+                enemy.move();
+                checkHit(player, enemy);
+                checkWin(player,enemy);
+            }else if(currentGameState == GameStates.GAMEWIN || currentGameState == GameStates.GAMELOSE || currentGameState == GameStates.GAMEMENU){
+                reset();
+            }
             repaint();
             lastTime = firstTime;
         }
@@ -96,9 +115,32 @@ public class RunScreen extends JPanel implements ActionListener, KeyListener{
 
     @Override
     public void keyPressed(KeyEvent evt) {
+
         
         switch (evt.getKeyCode()) {
-            case KeyEvent.VK_A: player.moveLeft = true;
+            case KeyEvent.VK_ESCAPE: 
+                    if(currentGameState == GameStates.GAMESTARTED) currentGameState = GameStates.GAMEPAUSED;
+                    else if(currentGameState == GameStates.GAMEPAUSED) currentGameState = GameStates.GAMESTARTED;
+                    break;
+            case KeyEvent.VK_I:
+                    if(currentGameState == GameStates.GAMEMENU) currentGameState = GameStates.GAMEINSTRUCTION;
+                    else if(currentGameState == GameStates.GAMEINSTRUCTION) currentGameState = GameStates.GAMEINSTRUCTION_2;
+                    else if(currentGameState == GameStates.GAMEINSTRUCTION_2) currentGameState = GameStates.GAMEMENU;
+                    break;
+            case KeyEvent.VK_ENTER:
+                    if(currentGameState == GameStates.GAMEMENU) currentGameState = GameStates.GAMESTARTED;
+                    else if(currentGameState == GameStates.GAMEPAUSED || currentGameState == GameStates.GAMEWIN ||  currentGameState == GameStates.GAMELOSE){
+                        currentGameState = GameStates.GAMEMENU;
+                    } 
+                    break;
+            case KeyEvent.VK_R:
+                    if(currentGameState == GameStates.GAMEWIN ||  currentGameState == GameStates.GAMELOSE) currentGameState = GameStates.GAMESTARTED;
+                    break;
+            case KeyEvent.VK_Q:
+                    if(currentGameState == GameStates.GAMEMENU || currentGameState == GameStates.GAMEPAUSED || currentGameState == GameStates.GAMEWIN ||  currentGameState == GameStates.GAMELOSE){
+                        System.exit(0);
+                    } 
+            case KeyEvent.VK_A:  player.moveLeft = true;
                     break;
             case KeyEvent.VK_D:  player.moveRight = true;
                     break;
@@ -113,11 +155,12 @@ public class RunScreen extends JPanel implements ActionListener, KeyListener{
             case KeyEvent.VK_U:  player.taunt = true;
                     break;
                 }
+
+        
     }
 
     @Override
     public void keyReleased(KeyEvent evt) {
-
         switch (evt.getKeyCode()) {
             case KeyEvent.VK_A: player.moveLeft = false;
                     break;
@@ -134,5 +177,36 @@ public class RunScreen extends JPanel implements ActionListener, KeyListener{
              case KeyEvent.VK_U:  player.taunt = false;
                     break;
         }
+        
+    }
+
+    public void checkHit(Player player, Enemy enemy){
+        player.getHit = false; 
+        enemy.getHit = false;
+        if(player.getStates().contains(CharacterState.ATTACKING) || (player.getStates().contains(CharacterState.SLAM) && !player.getStates().contains(CharacterState.GROUNDED))){
+            if(collision.check(player.getHitBox(), enemy.getHitBox())){
+                enemy.getHit = true;
+                enemy.damageReceived = player.getDamage();
+            }
+        }
+        if(enemy.getStates().contains(CharacterState.ATTACKING) || (enemy.getStates().contains(CharacterState.SLAM) && !enemy.getStates().contains(CharacterState.GROUNDED))){
+            if(collision.check(player.getHitBox(), enemy.getHitBox())){
+                player.getHit = true;
+                player.damageReceived = enemy.getDamage();
+            }
+        }
+    }
+
+    public void checkWin(Player player, Enemy enemy){
+        if(player.getHealth() <= 0 ){
+            currentGameState = GameStates.GAMELOSE;
+        }else if (enemy.getHealth() <= 0){
+            currentGameState = GameStates.GAMEWIN;
+        }
+    }
+
+    private void reset(){
+        player.reset();
+        enemy.reset();
     }
 } 

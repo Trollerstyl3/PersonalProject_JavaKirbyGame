@@ -1,0 +1,29 @@
+package src.gamestates;
+
+import java.awt.Graphics2D;
+import java.awt.Font;
+import java.awt.GraphicsEnvironment;
+import java.io.File;
+
+import src.gamestates.enums.GameStates;
+
+public class ScreenState {
+    
+    Font sfAtarian;
+    
+    public ScreenState(){
+        try {
+            sfAtarian = Font.createFont(Font.TRUETYPE_FONT, new File("src/res/sf_atarian.ttf"));
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File("src/res/sf_atarian.ttf")));
+        } catch (Exception e ) {
+            e.printStackTrace();    
+            System.out.println("not found");
+        }
+    }
+
+    public void draw(Graphics2D g2d, GameStates screenState){
+
+    }
+
+}

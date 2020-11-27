@@ -1,0 +1,63 @@
+package src.util;
+
+import src.objects.*;
+import src.objects.enums.*;
+import src.*;
+
+/**
+ * AI
+ */
+public class AI {
+
+
+    RunScreen screen;
+    double attackTimer;
+
+    public AI(RunScreen screen){
+        this.screen = screen;
+        attackTimer = 0;
+    }
+     
+    public void movement(Enemy enemy, Player player){
+        double attackLength = 2;
+
+        attackTimer += screen.getDeltaTime();
+        if(attackTimer < attackLength){
+            enemy.attack = false;
+        }else{
+            if((Math.abs(enemy.getX()-(player.getX()+player.getWidth())) < 100 || Math.abs(player.getX()-enemy.getX()) < 100) && enemy.getStates().contains(CharacterState.GROUNDED) && enemy.getY() == player.getY() && !enemy.getStates().contains(CharacterState.HURT)){
+        
+                enemy.attack = true;
+                attackTimer = 0;
+    
+            }
+            
+            if(Math.abs(enemy.getX()-player.getX()) < 30 && enemy.getY() < player.getY() && !enemy.getStates().contains(CharacterState.GROUNDED)){
+        
+                enemy.moveDown = true;
+                enemy.moveUp = false;
+
+                attackTimer = 0;
+            }
+        }
+
+
+
+        if(enemy.getX() < player.getX() && player.getX() < 700 && player.getX()> 0){
+            enemy.moveRight = true;
+            enemy.moveLeft = false;
+        }else if(enemy.getX() > player.getX() && player.getX() < 700 && player.getX()> 0){
+            enemy.moveLeft = true;
+            enemy.moveRight = false;
+        }
+
+
+        if(enemy.getY() > player.getY()+200 && enemy.getStates().contains(CharacterState.GROUNDED)){
+            enemy.moveUp = true;
+            enemy.moveDown = false;
+        }else if(enemy.getStates().contains(CharacterState.GROUNDED)){
+            enemy.moveUp = false;
+            enemy.moveDown = false;
+        }
+    }
+}

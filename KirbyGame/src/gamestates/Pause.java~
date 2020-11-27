@@ -1,0 +1,28 @@
+package src.gamestates;
+
+import java.awt.Graphics2D;
+
+import src.gamestates.enums.GameStates;
+import java.awt.Color;
+
+
+public class Pause extends ScreenState{
+    
+
+
+    public Pause(){
+        super();
+    }
+    
+    @Override
+    public void draw(Graphics2D g2d, GameStates screenState){
+        g2d.setPaint(Color.BLACK);
+        g2d.setFont(sfAtarian.deriveFont(70f));
+        g2d.drawString("GAME PAUSED", 85, 250);
+        
+        g2d.setFont(sfAtarian.deriveFont(25f));
+        g2d.drawString("press ENTER to return to main menu",135,310);
+        g2d.drawString("press ESC to return to the game",150,350);
+        g2d.drawString("press Q to quit",260,390);
+    }
+}

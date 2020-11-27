@@ -1,0 +1,11 @@
+package src.gamestates.enums;
+
+public enum GameStates {
+    GAMEPAUSED,
+    GAMESTARTED,
+    GAMEMENU,
+    GAMEINSTRUCTION,
+    GAMEINSTRUCTION_2,
+    GAMEWIN,
+    GAMELOSE
+}

@@ -1,10 +1,23 @@
+/* Name: Khoi Nguyen
+ * Date: November 20, 2020
+ * Class Description: This class will load up all the sprites for the enemy and the player and allow the 
+ * other class to access it
+ */
+
+// Please don't remove the packages because I have many folders
 package src.loader;
+
+// import all packages needed
 import java.awt.image.*;
 import javax.imageio.*;
 import src.*;
 import src.objects.enums.*;
 import java.io.*;
+
+// Create the class CharacterData
 public class CharacterData {
+  
+    // All the variable to keep tract of what movement is what array
     public static final int WALK_RIGHT = 0;
     public static final int WALK_LEFT = 1;
     public static final int PAUSED_RIGHT = 2;
@@ -30,34 +43,43 @@ public class CharacterData {
     public static final int FALL_RIGHT = 22;
     public static final int FALL_LEFT = 23;
 
+    // 2D array to load the sprites onto for the row it is the movement and column is the sprite
     BufferedImage[][] normalKirby;
     BufferedImage[][] knightKirby;
-    BufferedImage spriteSheetCharacter;
-
+    BufferedImage spriteSheetCharacter; // this to load up the sheet first
+    
+    // keep track of the animation 
     boolean found;
     int imgCount,currentState;
     EntityType entityType;
 
+    //keep track of the animation
     BufferedImage[] currentImageArray, oldImageArray;
     
+    // animation timer
     double animTimer;
 
+    // the RunScreen
     RunScreen screen;
 
+    // Constructor for this class that will pass in the RunScreen and the type of entity to know what to take from the sprite sheet
     public CharacterData(RunScreen screen,EntityType entityType){
-        this.screen = screen;
+        this.screen = screen; //Screen sent in is equal to screen
 
-        this.entityType = entityType;
+        this.entityType = entityType; // set entityType to entityType
 
+        // Set the current state and count to 0
         imgCount = 0;
         currentState = 0;
+        
+        // load the image
         loadImages();
     }
 
     public void loadImages(){
 
 
-
+      // Check the type of entity, if it is player then create 2d array for player if enemy then just create it for enemy
         if(entityType == EntityType.PLAYER){
             normalKirby = new BufferedImage [24][];
             initNormalKirby();
@@ -66,21 +88,22 @@ public class CharacterData {
             initKnightKirby();
         }
         
-        found = true;
+        found = true; // default found to true
+ 
+        spriteSheetCharacter = null; // sprite sheet to null
 
-        spriteSheetCharacter = null;
-
+        // Find the file
         File myFileCharacter = new File("src/res/kirbys_character.png");
 
-        try {
-            spriteSheetCharacter = ImageIO.read(myFileCharacter);   
+        try { // try catch to catch the exception thrown when file not foudn
+            spriteSheetCharacter = ImageIO.read(myFileCharacter);    // try loading it in
         } 
         catch (IOException e) {
             found = false;
             System.out.println("not found");
         }
 
-        if(found){            
+        if(found){ // if the file was found then load up the sprite for the according EntityType
 
             if(entityType == EntityType.PLAYER){
                 setNormalKirby();
@@ -95,6 +118,7 @@ public class CharacterData {
         }
     }
 
+    // declare the number of sprites for the according actions for normal Kirby
     private void initNormalKirby (){
         normalKirby[WALK_RIGHT] = new BufferedImage[2];
         normalKirby[WALK_LEFT] = new BufferedImage[2];
@@ -122,6 +146,7 @@ public class CharacterData {
         normalKirby[STAND_LEFT] = new BufferedImage[2];
     }
 
+    // Get the subImage from the spritesheet and load it into the 2D array with the according movement for normalKirby
     private void setNormalKirby(){
             normalKirby[STAND_RIGHT][0] = spriteSheetCharacter.getSubimage(4, 38, 22, 19);
             normalKirby[WALK_RIGHT][0] = spriteSheetCharacter.getSubimage(29, 37, 22, 20);
@@ -164,6 +189,7 @@ public class CharacterData {
             normalKirby[LOSE_RIGHT][0] = spriteSheetCharacter.getSubimage(1244, 37, 21, 20);
 
 
+            // For all left movemnt it is just right but flipped
             normalKirby[STAND_LEFT][0] = flip(normalKirby[STAND_RIGHT][0]);
 
             normalKirby[WALK_LEFT][0] = flip(normalKirby[WALK_RIGHT][0]);
@@ -206,7 +232,7 @@ public class CharacterData {
             normalKirby[LOSE_LEFT][0] = flip(normalKirby[LOSE_RIGHT][0]);
     }
 
-
+    // declare the number of sprites for the according actions for enemy Kirby
     private void initKnightKirby(){
         knightKirby[WALK_RIGHT] = new BufferedImage[2];
         knightKirby[PAUSED_RIGHT] = new BufferedImage[3];
@@ -235,6 +261,7 @@ public class CharacterData {
         knightKirby[STAND_LEFT] = new BufferedImage[1];
     }
 
+    // Get the subImage from the spritesheet and load it into the 2D array with the according movement for enemyKirby
     private void setKnightKirby(){
 
         knightKirby[STAND_RIGHT][0] = spriteSheetCharacter.getSubimage(4, 275, 26, 30);
@@ -274,7 +301,7 @@ public class CharacterData {
 
         knightKirby[LOSE_RIGHT][0] = spriteSheetCharacter.getSubimage(1246, 267, 23, 38);
 
-
+        // For all left movemnt it is just right but flipped
         knightKirby[STAND_LEFT][0] = flip(knightKirby[STAND_RIGHT][0]);
 
         knightKirby[WALK_LEFT][0] = flip(knightKirby[WALK_RIGHT][0]);
@@ -314,32 +341,35 @@ public class CharacterData {
         knightKirby[LOSE_LEFT][0] = flip(knightKirby[LOSE_RIGHT][0]);
     }
 
+    //method to set the current state to change the movement animation
     public void setCurrentState(int currentState) {
 
 
         this.currentState = currentState;
         
-        if(entityType == EntityType.PLAYER){
+        if(entityType == EntityType.PLAYER){ // check the entity type before changing
             currentImageArray = normalKirby[currentState];
         }else if(entityType == EntityType.ENEMY){
             currentImageArray = knightKirby[currentState];
         }
     }
 
+    // get the current state
     public int getCurrentState(){
         return currentState;
     }
 
-
+    // draw will return the sprite according to the animation length
     public BufferedImage draw(){
         double animLength = 0.6;
-        if(currentState == CHARGE_LEFT || currentState == CHARGE_RIGHT || currentState == ATTACK_RIGHT || currentState == ATTACK_LEFT) animLength = 0.4;
+        if(currentState == CHARGE_LEFT || currentState == CHARGE_RIGHT || currentState == ATTACK_RIGHT || currentState == ATTACK_LEFT) animLength = 1; // attack and charge will be slower than normal animation as there will be a timer in the other class too
         animTimer += screen.getDeltaTime();  
-        if(animTimer > (animLength + animLength / 10) / currentImageArray.length && !(currentState == STAND_RIGHT || currentState == STAND_LEFT)){
-            imgCount++;
+        if(animTimer > (animLength * 2 / 10) / currentImageArray.length && !(currentState == STAND_RIGHT || currentState == STAND_LEFT)){
+            imgCount++; // increase the image count if it is biggers than 2 times the animLength div 10 and divided by the array length and is not standing right or left
             animTimer = 0;
         }
 
+        // if the old image array is equal to the current image array then the img count goes reverse to 0
         if (oldImageArray == currentImageArray){                
             imgCount = imgCount%currentImageArray.length;              
         }
@@ -351,8 +381,8 @@ public class CharacterData {
         return currentImageArray[imgCount];
     }    
 
-
-    BufferedImage flip(BufferedImage sprite){
+    // This flips the rgb value of the buffered image to return a buffered image that is flipped on the y axis
+    private BufferedImage flip(BufferedImage sprite){
         BufferedImage img = new BufferedImage(sprite.getWidth(),sprite.getHeight(),BufferedImage.TYPE_INT_ARGB);
         for(int x = sprite.getWidth()-1;x>0;x--){
             for(int y = 0;y < sprite.getHeight();y++){
@@ -360,5 +390,21 @@ public class CharacterData {
             }
         }
         return img; 
+    }
+
+    // reset everything for the game to restart again
+    public void reset(){
+        animTimer = 999;
+        imgCount = 0;
+        if(entityType == EntityType.PLAYER){
+            setNormalKirby();
+            currentState = WALK_RIGHT;
+            currentImageArray = normalKirby[WALK_RIGHT];
+        }else if(entityType == EntityType.ENEMY){
+            setKnightKirby();
+            currentState = WALK_LEFT;
+            currentImageArray = knightKirby[WALK_LEFT];
+        }
+        oldImageArray = currentImageArray;
     }
 }

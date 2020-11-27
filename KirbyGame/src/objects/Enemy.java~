@@ -1,0 +1,354 @@
+package src.objects;
+
+import java.awt.*;
+import java.awt.image.*;
+import src.loader.*;
+import src.util.*;
+import src.*;
+import src.objects.enums.*;
+import src.objects.interfaces.*;
+
+public class Enemy extends GameEntity implements ObjectInterface{
+
+    CollisionChecker collision;
+
+    public boolean moveLeft;
+    public boolean moveRight;
+    public boolean moveUp;
+    public boolean moveDown;
+
+
+    public boolean charge;
+    public boolean attack;
+    public boolean taunt;
+    public boolean getHit;
+
+    private double scale; 
+    private int health, attackDamage, slamDamage;
+    public int damageReceived;
+
+    double hurtTime;
+
+    double attackTime;
+    int attackCounter;
+    int attackLimit;
+
+    BufferedImage current;
+    CharacterState attackSide;
+
+    int xOffSet,yOffSet;
+    int initX, initY;
+
+    Stage stage;
+
+    public Enemy(int x, int y, RunScreen screen){
+
+        super(x,y,screen,EntityType.ENEMY);
+
+        initX = x;
+        initY = y;
+        collision = new CollisionChecker();
+    
+        states.add(CharacterState.GROUNDED);
+        states.add(CharacterState.RIGHT);
+
+        dx = 0;
+        dy = 0;
+
+        yOffSet = 0;
+        xOffSet = 0;
+
+        scale = 2.5;
+
+        attackTime = 0;
+        attackCounter = 0;
+        attackLimit = 0;
+
+        health = 100;
+        attackDamage = 20;
+        slamDamage = 10;
+        getHit = false;
+
+        stage = screen.stage;
+    }
+
+
+    public void move(){
+        if(getHit && moveDown && states.contains(CharacterState.GROUNDED)){
+            getHit = false;
+        }
+
+
+        if(moveLeft && moveRight || !moveLeft && !moveRight){
+            dx *= 0.8;
+            if(states.contains(CharacterState.SLAM)) dx = 0;
+            if((states.contains(CharacterState.CHARGING) || (states.contains(CharacterState.ATTACKING) && states.contains(CharacterState.GROUNDED)))&& states.contains(CharacterState.RIGHT)) dx = 5;
+            if((states.contains(CharacterState.CHARGING) || (states.contains(CharacterState.ATTACKING) && states.contains(CharacterState.GROUNDED))) && states.contains(CharacterState.LEFT)) dx = -5;
+        }else if(moveLeft && !moveRight){
+            
+                dx = Math.max( -5 ,--dx); 
+                if(states.contains(CharacterState.CHARGING)  && attackSide == CharacterState.LEFT) dx += -5; 
+                if(states.contains(CharacterState.ATTACKING)  && attackSide == CharacterState.LEFT  && states.contains(CharacterState.GROUNDED)) dx = -7;
+                if(states.contains(CharacterState.SLAM))  dx = 0;
+                if(states.contains(CharacterState.RIGHT) && (attackSide == CharacterState.LEFT || attackSide == null))states.remove(CharacterState.RIGHT);
+                if(!states.contains(CharacterState.LEFT) && (attackSide == CharacterState.LEFT || attackSide == null))states.add(CharacterState.LEFT);
+            
+        }else if(!moveLeft && moveRight){
+                dx =Math.min( 5 ,++dx);  
+                if(states.contains(CharacterState.ATTACKING)  && attackSide == CharacterState.RIGHT  && states.contains(CharacterState.GROUNDED)) dx = 7;
+                if(states.contains(CharacterState.CHARGING) && attackSide == CharacterState.RIGHT) dx += 5;
+                if(states.contains(CharacterState.SLAM)) dx = 0;
+                if(!states.contains(CharacterState.RIGHT) && (attackSide == CharacterState.RIGHT || attackSide == null))states.add(CharacterState.RIGHT);
+                if(states.contains(CharacterState.LEFT) && (attackSide == CharacterState.RIGHT || attackSide == null))states.remove(CharacterState.LEFT);
+        
+        }
+        
+        dy += 0.3;
+
+        if(moveUp){
+            hitBox.y +=2;
+            if(collision.check(stage.getHitBox(),getHitBox())){
+                dy = -12;
+                if(states.contains(CharacterState.GROUNDED))states.remove(CharacterState.GROUNDED);
+                if(!states.contains(CharacterState.JUMPING))states.add(CharacterState.JUMPING);
+            }
+            hitBox.y -= 2;
+        }
+
+        if(attack){
+            if(!states.contains(CharacterState.ATTACKING))states.add(CharacterState.ATTACKING);
+        }
+
+        if(getHit){
+        
+            if(!states.contains(CharacterState.HURT))states.add(CharacterState.HURT);
+            if(states.contains(CharacterState.ATTACKING))states.remove(CharacterState.ATTACKING);
+            if(states.contains(CharacterState.TAUNTING))states.remove(CharacterState.TAUNTING);
+        }
+
+        if(moveDown){
+            if(dy == -12) dy = 0;
+            dy += 1.5;
+            attackSide = null;
+
+            if(states.contains(CharacterState.JUMPING))states.remove(CharacterState.JUMPING);
+            if(states.contains(CharacterState.FALLING))states.remove(CharacterState.FALLING);
+            if(states.contains(CharacterState.ATTACKING))states.remove(CharacterState.ATTACKING);
+            if(!states.contains(CharacterState.SLAM))states.add(CharacterState.SLAM);
+        }else{
+            if(states.contains(CharacterState.SLAM))states.remove(CharacterState.SLAM);
+        }
+
+        checkState();
+
+        if(dx > -0.75 && dx < 0.75){
+            dx = 0;
+            if(!states.contains(CharacterState.STOPPED))states.add(CharacterState.STOPPED);
+        }else{
+            if(states.contains(CharacterState.STOPPED))states.remove(CharacterState.STOPPED);
+        }
+
+        if(dy > 0){
+            if(states.contains(CharacterState.JUMPING))states.remove(CharacterState.JUMPING);
+            if(!states.contains(CharacterState.FALLING))states.add(CharacterState.FALLING);
+        }  
+
+        if(states.contains(CharacterState.GROUNDED) || states.contains(CharacterState.FALLING) || states.contains(CharacterState.SLAM)){
+            checkYCollision();
+        }
+
+        checkAnimation();
+
+
+        x += dx;
+        y += dy;
+
+        hitBox.x = x;
+        hitBox.y = y;
+        
+        
+    }
+
+    public void draw(Graphics2D g2d){
+
+        current = sprite.draw();
+            
+        yOffSet = (int) (current.getHeight()*scale);
+
+        hitBox.setFrame(x-xOffSet, y-yOffSet,(int) (current.getWidth()* scale),(int) (current.getHeight()* scale));
+        g2d.setPaint(Color.green);
+        g2d.fillRect(375, 10, 100*3, 50);
+        g2d.setPaint(Color.BLACK);
+        if(health <= 0 ) g2d.fillRect(375, 10, 100*3, 50);
+        else g2d.fillRect(375, 10, (100-health)*3, 50);
+        g2d.drawImage(current, x-xOffSet, y-yOffSet,(int) (current.getWidth()* scale),(int) (current.getHeight()* scale),null);
+    }
+
+
+
+    public int getDamage(){
+        if(states.contains(CharacterState.ATTACKING)){
+            return attackDamage;
+        }else if(states.contains(CharacterState.SLAM)){
+            return slamDamage;
+        }else{
+            return 0;
+        }
+    }
+
+    private void checkState(){
+        if(states.contains(CharacterState.HURT)){
+            doHurtAnimation();
+        }else if(states.contains(CharacterState.ATTACKING)){
+            doAttackAnimation();
+        }
+    }
+
+    private void doAttackAnimation(){
+        double attackLength = 0.4;
+            if(attackCounter == 0 && states.contains(CharacterState.LEFT)) attackSide = CharacterState.LEFT;
+            else if(attackCounter == 0 && states.contains(CharacterState.RIGHT)) attackSide = CharacterState.RIGHT;
+            if(attackCounter < 4){
+                if(attackSide == CharacterState.LEFT) dx = -Math.abs(dx);
+                else if(attackSide == CharacterState.RIGHT) dx = Math.abs(dx);
+                
+                if(attackCounter < 2 && attackSide == CharacterState.RIGHT && states.contains(CharacterState.GROUNDED)) xOffSet = 25;
+                if(attackCounter >= 2 && attackSide == CharacterState.LEFT && states.contains(CharacterState.GROUNDED)) xOffSet = 25;
+
+                if(attackCounter == 0) screen.soundManager.swingPlayer.play();
+                
+                attackTime += screen.getDeltaTime();
+                if(attackTime > (attackLength + attackLength / 10) /  5){
+                    attackCounter++;
+                    attackTime = 0;
+                }
+            }else{
+                attackCounter = 0;
+                attackTime = 0;
+                attackSide = null;
+                xOffSet = 0;
+                if(states.contains(CharacterState.ATTACKING))states.remove(CharacterState.ATTACKING);
+            }
+    }
+
+    private void doHurtAnimation(){
+        double hurtLength = 2;
+        hurtTime += screen.getDeltaTime();
+        if(hurtTime < hurtLength){
+            if(hurtTime == screen.getDeltaTime()) screen.soundManager.damagedEnemy.play();
+            dx = 0;
+            charge = false;
+            attack = false;
+            taunt = false;
+            if(!states.contains(CharacterState.HURT)) states.add(CharacterState.HURT);
+        }else{
+            health -= damageReceived;
+            states.remove(CharacterState.HURT);
+            hurtTime = 0;
+            getHit = false;
+            damageReceived = 0;
+        }
+    }
+
+    private void checkAnimation(){
+        if(states.contains(CharacterState.HURT)){
+            if(states.contains(CharacterState.LEFT)) sprite.setCurrentState(CharacterData.HURT_LEFT);
+            else if(states.contains(CharacterState.RIGHT)) sprite.setCurrentState(CharacterData.HURT_RIGHT);
+
+        }else if(states.contains(CharacterState.GROUNDED)){
+
+            if(states.contains(CharacterState.RIGHT)){
+                sprite.setCurrentState(CharacterData.WALK_RIGHT);
+                if(states.contains(CharacterState.SLAM)){
+                    sprite.setCurrentState(CharacterData.SLAM_RIGHT);
+                }else if(states.contains(CharacterState.ATTACKING)){
+                    if(states.contains(attackSide) || attackSide == null){
+                    sprite.setCurrentState(CharacterData.ATTACK_RIGHT);
+                    }else{
+                        sprite.setCurrentState(CharacterData.ATTACK_LEFT);
+                    }
+                }else if(states.contains(CharacterState.STOPPED)){
+                    sprite.setCurrentState(CharacterData.STAND_RIGHT);
+                }
+            }
+
+            if(states.contains(CharacterState.LEFT)){
+                
+                sprite.setCurrentState(CharacterData.WALK_LEFT);
+                if(states.contains(CharacterState.SLAM)){
+                    sprite.setCurrentState(CharacterData.SLAM_LEFT);
+                } else if(states.contains(CharacterState.ATTACKING)){
+                    if(states.contains(attackSide) || attackSide == null){
+                    sprite.setCurrentState(CharacterData.ATTACK_LEFT);
+                    }else{
+                        sprite.setCurrentState(CharacterData.ATTACK_RIGHT);
+                    }
+                }else if(states.contains(CharacterState.STOPPED)){
+                    sprite.setCurrentState(CharacterData.STAND_LEFT);
+                }
+            }
+
+        }else if(states.contains(CharacterState.SLAM)){
+
+            if(states.contains(CharacterState.RIGHT)) sprite.setCurrentState(CharacterData.SLAM_RIGHT);
+            if(states.contains(CharacterState.LEFT)) sprite.setCurrentState(CharacterData.SLAM_LEFT);
+
+        }else if(states.contains(CharacterState.JUMPING)){
+
+            if(states.contains(CharacterState.RIGHT)) sprite.setCurrentState(CharacterData.JUMP_RIGHT);
+            if(states.contains(CharacterState.LEFT)) sprite.setCurrentState(CharacterData.JUMP_LEFT);
+
+        }else if(states.contains(CharacterState.FALLING)){
+
+            if(states.contains(CharacterState.RIGHT)) sprite.setCurrentState(CharacterData.FALL_RIGHT);
+            if(states.contains(CharacterState.LEFT)) sprite.setCurrentState(CharacterData.FALL_LEFT);
+
+        }
+    }
+
+    private void checkYCollision(){
+        hitBox.y += dy;
+        
+        if(collision.check(stage.getHitBox(),getHitBox())){
+            hitBox.y -= dy;
+
+            while(!collision.check(stage.getHitBox(),getHitBox())) hitBox.y ++;
+            hitBox.y -=2;
+            y = (int) hitBox.y+yOffSet;
+            dy = 0;
+            if(states.contains(CharacterState.FALLING))states.remove(CharacterState.FALLING);
+            if(!states.contains(CharacterState.GROUNDED))states.add(CharacterState.GROUNDED);
+        }
+
+        
+    }
+
+    public int getHealth(){
+        return health;
+    }
+
+    public void reset(){
+        x = initX;
+        y = initY;
+
+        dx = 0;
+        dy = 0;
+
+        yOffSet = 0;
+        xOffSet = 0;
+
+        scale = 2.5;
+
+        attackTime = 999;
+        attackCounter = 0;
+        attackLimit = 0;
+
+        health = 100;
+        attackDamage = 15;
+        slamDamage = 10;
+        getHit = false;
+        
+        hurtTime = 999;
+    }
+
+}
